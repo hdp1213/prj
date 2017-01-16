@@ -5,6 +5,7 @@
 # 14/01/17 - created prj.py
 #          - added new, stat, list, update and delete functions
 #          - now v1.0
+# 16/01/17 - renamed 'list' to 'info'
 
 import sys
 import os
@@ -41,8 +42,8 @@ def main():
     return prj_new(args)
   elif (command == "stat"):
     return prj_stat(args)
-  elif (command == "list"):
-    return prj_list(args)
+  elif (command == "info"):
+    return prj_info(args)
   elif (command == "update"):
     return prj_update(args)
   elif (command == "delete"):
@@ -89,7 +90,7 @@ def prj_stat(args):
   return 0
 
 
-def prj_list(args):
+def prj_info(args):
   """Return descriptions of different projects"""
   projectName = args.project
 
@@ -301,7 +302,7 @@ def makeParser():
   parser.add_argument("cmd",
     type=str,
     nargs=1,
-    choices=["new", "stat", "list", "update", "delete"],
+    choices=["new", "stat", "info", "update", "delete"],
     metavar="COMMAND",
     help="command to give prj. Select from\n"
        "\tnew,\n"
