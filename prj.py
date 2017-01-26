@@ -6,6 +6,9 @@
 #          - added new, stat, list, update and delete functions
 #          - now v1.0
 # 16/01/17 - renamed 'list' to 'info'
+# 26/01/17 - added basic scheduler colour flag support
+
+# TODO(harry): rip out guts and add objects
 
 import sys
 import os
@@ -24,6 +27,9 @@ statDict = {'p': "proposed",
 
 defaultDescription = "My Exciting Project!"
 defaultStatus = 'a'
+
+activeFields = ["name", "status", "description",
+    "start_date", "end_date", "colour"]
 
 def main():
   """
@@ -132,6 +138,11 @@ def prj_update(args):
   except TypeError, e:
     projectStatus = None
 
+  try:
+    projectColour = args.colour[0]
+  except TypeError, e:
+    projectColour = None
+
   # Create a .prj file if there isn't one already
   while project is None:
     project = getProjectInfo(projectName)
@@ -143,6 +154,18 @@ def prj_update(args):
     if (stat == -1):
       printError("Project {0!r} does not exist.", projectName)
       return 7
+
+  # Check that all categories exist in the project object
+  # If not, set their default values
+  for field in activeFields:
+    try:
+      test = project[field]
+
+    # TODO(harry): make initialiseDefaults() a function
+    # Be aware that makeNewPrjFile does its own thing here
+    except KeyError, e:
+      if (field == "colour"):
+        project[field] = '"-"'
 
   # Description has been updated
   if projectDescription is not None:
@@ -163,6 +186,10 @@ def prj_update(args):
       project["end_date"] = strftime("%d/%m/%Y")
     else:
       project["end_date"] = ''
+
+  # Colour has been updated
+  if projectColour is not None:
+    project["colour"] = projectColour
 
   # Write project object back to .prj file
   return setProjectInfo(project)
@@ -206,6 +233,11 @@ def makeNewPrjFile(args):
   except TypeError, e:
     projectStatus = statDict[defaultStatus]
 
+  try:
+    projectColour = args.colour[0]
+  except TypeError, e:
+    projectColour = '"-"'
+
   # Sort out dates, too
   startDate = ''
   if (projectStatus != "proposed"):
@@ -220,7 +252,8 @@ def makeNewPrjFile(args):
     "status"      : projectStatus,
     "description" : projectDescription,
     "start_date"  : startDate,
-    "end_date"    : endDate
+    "end_date"    : endDate,
+    "colour"      : projectColour
   }
 
   return setProjectInfo(project)
@@ -243,13 +276,16 @@ def getProjectInfo(projectName):
 
 
 def setProjectInfo(project):
-  """Set project info in a .prj file using a dictionary"""
+  """Set project info in a .prj file using a dictionary
+
+  Returns an exit code of -1 if there was an IOError."""
   projectFile = "./{0}/.prj".format(project["name"])
   template = """name        : {name}
 status      : {status}
 description : {description}
 start_date  : {start_date}
-end_date    : {end_date}"""
+end_date    : {end_date}
+colour      : {colour}"""
 
   try:
     with open(projectFile, 'w') as prj:
@@ -264,23 +300,26 @@ end_date    : {end_date}"""
 
 def printProjectInfo(project, printType):
   if (printType == "short"):
-    info = """ - {name} ({status})"""
+    info = """ - {name} ({status}) (sch: {colour})"""
 
   elif (printType == "long"):
 
     if (project["status"] == "proposed"):
       info = """Project {name!r}: {description}
-  Currently {status}"""
+  Currently {status}
+  scheduler colour flag: {colour}"""
 
     elif (project["status"] == "complete"):
       info = """Project {name!r}: {description}
   {start_date} - {end_date}
-  Currently {status}"""
+  Currently {status}
+  scheduler colour flag: {colour}"""
 
     else: # active or inactive
       info = """Project {name!r}: {description}
   {start_date} - present
-  Currently {status}"""
+  Currently {status}
+  scheduler colour flag: {colour}"""
     
   else:
     printError("Unknown print type: {0!r}", printType)
@@ -334,6 +373,13 @@ def makeParser():
     metavar="DESC",
     help="set project description (only with new\n"
       "or update)")
+
+  parser.add_argument("-c", "--colour",
+    type=str,
+    dest="colour",
+    nargs=1,
+    metavar="COL",
+    help="project colour (used with scheduler)")
 
   parser.add_argument("-v", "--verbose",
     action="count",
