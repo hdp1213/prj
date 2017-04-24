@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#PYTHON_ARGCOMPLETE_OK
 
 # Project management script to use in ~/Documents/projects
 # Harry Poulter
@@ -10,6 +11,7 @@
 # 24/04/17 - added subparsers
 #          - made project path specification more robust
 #          - now v1.1
+#          - added support for argcomplete
 
 # TODO(harry): rip out guts and add objects
 
@@ -18,6 +20,7 @@ import os
 from shutil import rmtree
 import subprocess
 import argparse
+import argcomplete
 import yaml
 
 from time import strftime
@@ -40,6 +43,7 @@ def main():
     """
     # Parse arguments
     parser = makeParser()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     # Make commands dictionary
